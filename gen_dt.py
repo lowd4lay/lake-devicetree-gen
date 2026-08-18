@@ -4,6 +4,9 @@ from twrpdtgen.device_tree import DeviceTree
 
 orig_get_first_prop = DeviceInfo.get_first_prop
 
+# Fingerprint chuan dinh dang Android de bypass thu vien kiem tra
+FAKE_FINGERPRINT = "Xiaomi/lake/lake:16/AP2A.240805.005/V3.0.1.0:user/release-keys"
+
 DEFAULTS = {
     "ro.product.system.device": "lake",
     "ro.product.device": "lake",
@@ -18,9 +21,14 @@ DEFAULTS = {
     "ro.build.version.release": "16",
     "ro.build.version.sdk": "36",
     "ro.product.cpu.abi": "arm64-v8a",
+    "ro.build.fingerprint": FAKE_FINGERPRINT,
+    "ro.system.build.fingerprint": FAKE_FINGERPRINT,
+    "ro.bootimage.build.fingerprint": FAKE_FINGERPRINT,
+    "ro.build.description": "lake-user 16 AP2A.240805.005 release-keys",
+    "ro.build.display.id": "HyperOS 3.0.1.0",
+    "ro.build.date.utc": "1735689600",
 }
 
-# Them *args và **kwargs de hung moi tham so truyen vao
 def patched_get_first_prop(self, props, *args, **kwargs):
     try:
         res = orig_get_first_prop(self, props, *args, **kwargs)
@@ -32,6 +40,11 @@ def patched_get_first_prop(self, props, *args, **kwargs):
     for p in props:
         if p in DEFAULTS:
             return DEFAULTS[p]
+
+    # Kiem tra neu dang truy van thuoc tinh fingerprint
+    if any("fingerprint" in str(p).lower() for p in props):
+        return FAKE_FINGERPRINT
+
     return "lake"
 
 DeviceInfo.get_first_prop = patched_get_first_prop
