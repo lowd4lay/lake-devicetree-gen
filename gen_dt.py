@@ -2,7 +2,6 @@ from pathlib import Path
 from sebaubuntu_libs.libandroid.device_info import DeviceInfo
 from twrpdtgen.device_tree import DeviceTree
 
-# Patch get_first_prop de bypass loi thieu build.prop tren HyperOS (Android 16)
 orig_get_first_prop = DeviceInfo.get_first_prop
 
 DEFAULTS = {
@@ -21,18 +20,22 @@ DEFAULTS = {
     "ro.product.cpu.abi": "arm64-v8a",
 }
 
-def patched_get_first_prop(self, props):
+# Them *args và **kwargs de hung moi tham so truyen vao
+def patched_get_first_prop(self, props, *args, **kwargs):
     try:
-        return orig_get_first_prop(self, props)
-    except AssertionError:
-        for p in props:
-            if p in DEFAULTS:
-                return DEFAULTS[p]
-        return "lake"
+        res = orig_get_first_prop(self, props, *args, **kwargs)
+        if res:
+            return res
+    except Exception:
+        pass
+
+    for p in props:
+        if p in DEFAULTS:
+            return DEFAULTS[p]
+    return "lake"
 
 DeviceInfo.get_first_prop = patched_get_first_prop
 
-# Tien hanh xuat Device Tree
 img_path = Path("vendor_boot.img")
 out_path = Path("output")
 
