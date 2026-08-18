@@ -1,0 +1,33 @@
+name: Gen TWRP Device Tree
+
+on: workflow_dispatch
+
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cpio unzip
+          pip install twrpdtgen
+
+      - name: Generate device tree from vendor_boot
+        run: python3 -m twrpdtgen vendor_boot.img -o output --git
+
+      - name: Show output structure
+        run: find output -maxdepth 5
+
+      - name: Upload device tree artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lake-device-tree
+          path: output
